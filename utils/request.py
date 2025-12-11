@@ -115,6 +115,7 @@ class Request(object):
         params['device_memory'] = self.COOKIES.get('device_web_memory_size', 8)
         params['verifyFp'] = self.COOKIES.get('s_v_web_id', None)
         params['fp'] = self.COOKIES.get('s_v_web_id', None)
+        params['uifid'] = self.COOKIES.get('UIFID', None)
         params['webid'] = self.get_webid()
         return params
 
@@ -176,7 +177,8 @@ class Request(object):
             '/aweme/v1/web/series/collections': f"https://www.douyin.com/user/self?from_tab_name=main&showSubTab=favorite_folder&showTab=favorite_collection",
             '/aweme/v1/web/mix/list/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/home/search/item/': f"https://www.douyin.com/user/",
-            '/aweme/v1/web/seo/inner/link/': f"https://www.douyin.com/user/"
+            '/aweme/v1/web/seo/inner/link/': f"https://www.douyin.com/user/",
+            '/aweme/v2/web/module/feed/':  f"https://www.douyin.com/jingxuan",
         }
         for pattern, referer_value in referer_map.items():
             if pattern == uri:
@@ -185,15 +187,16 @@ class Request(object):
         if data:
             bd_client_data = self.COOKIES.get("bd_ticket_guard_client_data", None)
             self.HEADERS["Content-Type"] = "application/x-www-form-urlencoded"
+            self.HEADERS["Uifid"] = self.COOKIES.get("UIFID", None)
             # self.HEADERS["Bd-Ticket-Guard-Client-Data"] = bd_client_data
             # self.HEADERS["Bd-Ticket-Guard-Web-Version"] = '1'
             # self.HEADERS["Bd-Ticket-Guard-Version"] = '2'
             # self.HEADERS["Bd-Ticket-Guard-Iteration-Version"] = '1'
-            self.HEADERS["X-Secsdk-Csrf-Token"] = ''
+            self.HEADERS["X-Secsdk-Csrf-Token"] = 'DOWNGRADE'
             print(data)
             response = self.client.post(
                 url, params=params, data=data, headers=self.HEADERS, cookies=self.COOKIES)
-            # print(f'url:{response.url}, header:{self.HEADERS}')
+            # print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
         elif live:
             response = self.client.get(
                 live_url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
@@ -203,7 +206,7 @@ class Request(object):
             # print(f'url:{response.url}, header:{self.HEADERS}')
         if response.status_code != 200 or response.text == '':
             logger.error(
-                f'JSON请求失败：url: {url},  params: {params},header: {self.HEADERS}, code: {response.status_code}, body: {response.text}')
+                f'JSON请求失败：url: {url},  params: {params},header: {self.HEADERS}, code: {response.status_code}, body: {response}')
             return {}
         return response.json()
 

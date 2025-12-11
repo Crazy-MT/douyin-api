@@ -86,6 +86,13 @@ class TestCase(unittest.TestCase):
         print('channel_setting value:')
         pprint(res.get_json())
 
+    # '/aweme/v2/web/module/feed/'
+    def test_get_module_feed(self):
+        res = self.client.get('/aweme/v2/web/module/feed/?count=10&refresh_index=1')
+        self.assertEqual(res.status_code, 200)
+        print('module_feed value:')
+        pprint(res.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()

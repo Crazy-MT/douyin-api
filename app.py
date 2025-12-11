@@ -4,6 +4,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.register_blueprint(api_blueprint, url_prefix='/aweme/v1/web')
+# 精选页面使用/aweme/v2/web
+app.register_blueprint(api_blueprint, url_prefix='/aweme/v2/web', name='api_v2')
 
 CORS(app, origins='*', supports_credentials=True)  # 解决跨域问题
 

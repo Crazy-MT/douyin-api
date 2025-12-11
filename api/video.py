@@ -116,7 +116,7 @@ def get_reply_list():
 
 """
 @desc: 获取首页瀑布流视频
-@url: /aweme/v1/web/module/feed/
+@url: /aweme/v2/web/module/feed/
 """
 
 
@@ -125,19 +125,27 @@ def get_module_feed():
     count = request.args.get('count')
     refresh_index = request.args.get('refresh_index')
     tag_id = request.args.get('tag_id')
+    presented_ids = request.args.get('presented_ids')
+    filter_gids = request.args.get('filter_gids')
+    is_active_tab = request.args.get('is_active_tab')
+    data= {
+
+    }
     params = {'count': count,
               'video_type_select': '1',
               'module_id': '3003101',
-              'filterGids': '',
-              'presented_ids': '',
+              'filterGids': filter_gids,
               'refer_id': '',
               'refer_type': '10',
+              'pull_type': 'w',
               'tag_id': tag_id,
-              "aweme_pc_rec_raw_data": '{"is_xigua_user":0,"is_client":false}',
-              "refresh_index": refresh_index
+              "is_active_tab": is_active_tab,
+              "aweme_pc_rec_raw_data": '{"is_xigua_user":0,"danmaku_switch_status":0,"is_client":false}',
+              "refresh_index": refresh_index,
+              'presented_ids': presented_ids,
               }
-    url = '/aweme/v1/web/module/feed/'
-    aweme_list = request_instance.getJSON(url, params)
+    url = '/aweme/v2/web/module/feed/'
+    aweme_list = request_instance.getJSON(url, params, data)
     if aweme_list:
         return jsonify(aweme_list)
 
