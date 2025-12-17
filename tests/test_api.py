@@ -93,6 +93,15 @@ class TestCase(unittest.TestCase):
         print('module_feed value:')
         pprint(res.get_json())
 
+    # '/aweme/v1/web/locate/post/'
+    def test_get_locate_post(self):
+        res = self.client.get('/aweme/v1/web/locate/post/?sec_user_id=&count=10'
+                              '&max_cursor=1763284616000&locate_query=true'
+                              '&locate_item_id=7547271075232337212&locate_item_cursor=1757235984000')
+        self.assertEqual(res.status_code, 200)
+        print('locate_post value:')
+        pprint(res.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()

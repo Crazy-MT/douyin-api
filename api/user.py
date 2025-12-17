@@ -66,7 +66,9 @@ def get_user_post():
     locate_item_id = request.args.get('locate_item_id')
     need_time_list = request.args.get('need_time_list')
     locate_query = request.args.get('locate_query')
+    forward_anchor_cursor = request.args.get('forward_anchor_cursor')
     forward_end_cursor = request.args.get('forward_end_cursor')
+    locate_item_cursor = request.args.get('locate_item_cursor')
     url = '/aweme/v1/web/aweme/post/'
     params = {
         'sec_user_id': sec_user_id,
@@ -74,8 +76,10 @@ def get_user_post():
         'max_cursor': max_cursor,
         'locate_item_id': locate_item_id,
         'locate_query': locate_query,
+        'forward_anchor_cursor': forward_anchor_cursor,
         'show_live_replay_strategy': '1',
         'need_time_list': need_time_list,
+        'locate_item_cursor': locate_item_cursor,
         'time_list_query': '0',
         'publish_video_strategy_type': '2'
     }
@@ -83,6 +87,42 @@ def get_user_post():
         params["forward_end_cursor"] = forward_end_cursor
 
     post_list = request_instance.getJSON(url, params)
+    if post_list:
+        return jsonify(post_list)
+    else:
+        return jsonify({'error': 'Failed to retrieve post_list; Check you Cookie and Referer!'}), 403
+
+
+"""
+@desc: 获取用户作品列表当前的视频列表
+@url: /aweme/v1/web/locate/post/
+@param: sec_user_id 用户id
+@param: max_cursor 游标
+@param: count 每页数量
+@param: locate_item_id 视频id
+@param: locate_item_cursor 定位项游标
+@param: locate_query 是否定位 默认 true
+"""
+
+@api.route('/locate/post/')
+def get_user_post_locate():
+    sec_user_id = request.args.get('sec_user_id')
+    count = request.args.get('count')
+    max_cursor = request.args.get('max_cursor')
+    locate_item_id = request.args.get('locate_item_id')
+    locate_item_cursor = request.args.get('locate_item_cursor')
+    locate_query = request.args.get('locate_query')
+    url = '/aweme/v1/web/locate/post/'
+    params = {
+        'sec_user_id': sec_user_id,
+        'count': count,
+        'max_cursor': max_cursor,
+        'locate_item_id': locate_item_id,
+        'locate_item_cursor': locate_item_cursor,
+        'locate_query': locate_query,
+        'publish_video_strategy_type': '2'
+    }
+    post_list = request_instance.getJSON(url, params,data=None,live=None, web2=1)
     if post_list:
         return jsonify(post_list)
     else:
@@ -505,23 +545,31 @@ def get_user_follower():
 @api.route('/home/search/item/')
 def get_search_item():
     search_channel = request.args.get('search_channel')
+    search_source = request.args.get('search_source')
+    search_scene = request.args.get('search_scene')
+    sort_type = request.args.get('sort_type')
     keyword = request.args.get('keyword')
     from_user = request.args.get('from_user')
     count = request.args.get('count')
     offset = request.args.get('offset')
+    publish_time = request.args.get('publish_time')
+    is_filter_search = request.args.get('is_filter_search')
+    query_correct_type = request.args.get('query_correct_type')
+    enable_history = request.args.get('enable_history')
     url = '/aweme/v1/web/home/search/item/'
     params = {
         'search_channel': search_channel,
-        'search_source': 'normal_search',
+        'search_source': search_source,
         'from_user': from_user,
         'count': count,
         'offset': offset,
-        'search_scene': 'douyin_search',
-        'sort_type': '0',
-        'publish_time': '0',
-        'is_filter_search': '0',
-        'query_correct_type': '1',
+        'search_scene': search_scene,
+        'sort_type': sort_type,
+        'publish_time': publish_time,
+        'is_filter_search': is_filter_search,
+        'query_correct_type': query_correct_type,
         'keyword': keyword,
+        'enable_history': enable_history,
         'search_id': ''
     }
     search_item = request_instance.getJSON(url, params)

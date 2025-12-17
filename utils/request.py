@@ -24,6 +24,7 @@ from utils.execjs_fix import execjs
 class Request(object):
     HOST = 'https://www.douyin.com'
     LIVE_HOST = 'https://live.douyin.com'
+    WEB2_HOST = 'https://www-hj.douyin.com'
     PARAMS = {
         'device_platform': 'webapp',
         'aid': '6383',
@@ -151,9 +152,10 @@ class Request(object):
             return ''
         return response.text
 
-    def getJSON(self, uri: str, params: dict, data: dict = None, live=None):
+    def getJSON(self, uri: str, params: dict, data: dict = None, live=None, web2=None):
         url = f'{self.HOST}{uri}'
         live_url = f'{self.LIVE_HOST}{uri}'
+        web2_url = f'{self.WEB2_HOST}{uri}'
         params = self.get_params(params)
         params["a_bogus"] = self.get_sign(uri, params)
 
@@ -200,6 +202,11 @@ class Request(object):
         elif live:
             response = self.client.get(
                 live_url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
+            print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
+        elif web2:
+            response = self.client.get(
+                web2_url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
+            print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
         else:
             response = self.client.get(
                 url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
