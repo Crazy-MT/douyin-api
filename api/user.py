@@ -104,6 +104,7 @@ def get_user_post():
 @param: locate_query 是否定位 默认 true
 """
 
+
 @api.route('/locate/post/')
 def get_user_post_locate():
     sec_user_id = request.args.get('sec_user_id')
@@ -122,7 +123,7 @@ def get_user_post_locate():
         'locate_query': locate_query,
         'publish_video_strategy_type': '2'
     }
-    post_list = request_instance.getJSON(url, params,data=None,live=None, web2=1)
+    post_list = request_instance.getJSON(url, params, data=None, live=None, web2=1)
     if post_list:
         return jsonify(post_list)
     else:
@@ -335,7 +336,28 @@ def get_mix_list():
 
 
 """
-@desc: 合集的详细信息
+@desc: 合集详情
+@url: /aweme/v1/web/mix/detail/
+@param: mix_id
+"""
+
+
+@api.route('/mix/detail/')
+def get_mix_detail():
+    mix_id = request.args.get('mix_id')
+    url = '/aweme/v1/web/mix/detail/'
+    params = {
+        'mix_id': mix_id
+    }
+    mix_detail = request_instance.getJSON(url, params)
+    if mix_detail:
+        return jsonify(mix_detail)
+    else:
+        return jsonify({'error': 'Failed to retrieve  mix_detail; Check you Cookie and Referer!'}), 403
+
+
+"""
+@desc: 合集的详细列表
 @url: /aweme/v1/web/mix/aweme/
 """
 
@@ -360,8 +382,36 @@ def get_mix_list_detail():
 
 
 """
+@desc: 获取用户查看用户列表
+@url: /aweme/v1/web/view/user/visited/list/
+@param: count 数量 默认 20
+@param: cursor 游标 初始为空
+"""
+
+
+@api.route('/view/user/visited/list/')
+def get_view_user_visited_list():
+    count = request.args.get('count')
+    cursor = request.args.get('cursor')
+    url = '/aweme/v1/web/view/user/visited/list/'
+    params = {}
+    data = {
+        'count': count,
+        'cursor': cursor
+    }
+    view_user_visited_list = request_instance.getJSON(url, params, data)
+    if view_user_visited_list:
+        return jsonify(view_user_visited_list)
+    else:
+        return jsonify({'error': 'Failed to retrieve  view_user_visited_list; Check you Cookie and Referer!'}), 403
+
+
+"""
 @desc: 获取用户观看历史列表
 @url: /aweme/v1/web/history/read/
+@param: status  观看进度  不限-1 未看完 0  已看完 1
+@param: directory 视频时长 不限：0 小于1分钟：1 1-3分钟：2 3-10分钟：3 10分钟以上：4
+@param: category 视频分类  不限：0 二次元：1 音乐：2 体育：3 电影：4 游戏：5
 """
 
 
@@ -369,11 +419,17 @@ def get_mix_list_detail():
 def get_history_read():
     count = request.args.get('count')
     max_cursor = request.args.get('max_cursor')
+    directory = request.args.get('directory')
+    category = request.args.get('category')
+    status = request.args.get('status')
 
     url = '/aweme/v1/web/history/read/'
     params = {
         'count': count,
-        'max_cursor': max_cursor
+        'max_cursor': max_cursor,
+        'directory': directory,
+        'category': category,
+        'status': status
     }
     history_read = request_instance.getJSON(url, params)
     if history_read:
@@ -636,3 +692,28 @@ def get_follow_feed():
         return jsonify(follower_list)
     else:
         return jsonify({'error': 'Failed to retrieve follower_list; Check you Cookie and Referer!'}), 403
+
+
+"""
+@desc: 稍后再看记录
+@url: /aweme/v1/web/watchlater/list/
+@param: offset 0
+@param: list_type 0
+@param: operate_type 0
+"""
+
+
+@api.route('/watchlater/list/')
+def get_watchlater_list():
+    offset = request.args.get('offset')
+    list_type = request.args.get('list_type')
+    operate_type = request.args.get('operate_type')
+    url = '/aweme/v1/web/watchlater/list/'
+    params = request_instance.getJSON(url, {
+        'offset': offset,
+        'list_type': list_type,
+        'operate_type': operate_type,
+    })
+    if params:
+        return jsonify(params)
+    return jsonify({'error': 'Failed to retrieve watchlater_list; Check you Cookie and Referer!'}), 403

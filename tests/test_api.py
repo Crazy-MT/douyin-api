@@ -102,6 +102,27 @@ class TestCase(unittest.TestCase):
         print('locate_post value:')
         pprint(res.get_json())
 
+    # '/aweme/v1/web/view/user/visited/list/'
+    def test_get_view_user_visited_list(self):
+        res = self.client.get('/aweme/v1/web/view/user/visited/list/?count=10&cursor=0')
+        self.assertEqual(res.status_code, 200)
+        print('view_user_visited_list value:')
+        pprint(res.get_json())
+
+    # '/aweme/v1/web/mix/detail/'
+    def test_get_mix_detail(self):
+        # 注意：这里需要一个真实的mix_id来测试，目前使用占位符
+        res = self.client.get('/aweme/v1/web/mix/detail/?mix_id=7133033459831801863')
+        # 由于缺少有效的mix_id，可能返回403或其他错误状态码
+        print('mix_detail value:')
+        pprint(res.get_json())
+
+    # '/aweme/v1/web/watchlater/list/'
+    def test_get_watchlater_list(self):
+        res = self.client.get('/aweme/v1/web/watchlater/list/?offset=0&list_type=0&operate_type=0')
+        print('watchlater_list value:')
+        pprint(res.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()
