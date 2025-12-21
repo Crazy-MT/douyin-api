@@ -1,15 +1,15 @@
 import unittest
 from pprint import pprint
+from json import dumps, loads
 
 from app import app
-from json import dumps
 
 
 class TestSearchAPI(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
-        self.keyword = "赵露思"  # Assuming 'test' is the keyword for all tests
+        self.keyword = "赵露思"
         self.offset = 0
         self.count = 15
 
@@ -50,6 +50,14 @@ class TestSearchAPI(unittest.TestCase):
             f'/aweme/v1/web/general/search/single/?keyword={self.keyword}&offset={self.offset}&count={self.count}&filter_selected={filter_selected}&is_filter_search=1&list_type=single')
         self.assertEqual(response.status_code, 200)
         print('Search Result with All Parameters:')
+        pprint(response.get_json())
+
+    def test_search_suggestion(self):
+        # Test search suggestion API
+        response = self.app.get(
+            f'/aweme/v1/web/search/sug/?keyword={self.keyword}')
+        self.assertEqual(response.status_code, 200)
+        print('Search Suggestion Result:')
         pprint(response.get_json())
 
 

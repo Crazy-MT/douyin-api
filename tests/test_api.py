@@ -123,6 +123,13 @@ class TestCase(unittest.TestCase):
         print('watchlater_list value:')
         pprint(res.get_json())
 
+    # '/aweme/v1/web/mix/list/'
+    def test_get_mix_list(self):
+        # 注意：这里需要一个真实的sec_user_id来测试，目前使用占位符
+        res = self.client.get('/aweme/v1/web/mix/list/?sec_user_id=MS4wLjABAAAAuWb40KLM29J4hu2eXKN5GSZ8k3hdsZHRQ6CUNiW4OAY&count=10&cursor=0')
+        print('mix_list value:')
+        pprint(res.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -118,3 +118,27 @@ def get_suggest_words():
         return jsonify(suggest_words)
     else:
         return jsonify({'error': 'Failed to retrieve suggest_words; Check you Cookie and Referer!'}), 403
+
+"""
+@desc: 搜索推荐
+@url: aweme/v1/web/search/sug
+@param: keyword
+@param: source
+@param: from_group_id
+"""
+@api.route('/search/sug/')
+def get_search_sug():
+    keyword = request.args.get('keyword')
+    source = request.args.get('source')
+    from_group_id = request.args.get('from_group_id')
+    url = '/aweme/v1/web/search/sug/'
+    params = {
+        'keyword': keyword,
+        'source': 'aweme_video_web',
+        'from_group_id': '7585517202867047720'
+    }
+    search_sug = request_instance.getJSON(url, params)
+    if search_sug:
+        return jsonify(search_sug)
+    else:
+        return jsonify({'error': 'Failed to retrieve search_sug; Check you Cookie and Referer!'}), 403
