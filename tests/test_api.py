@@ -130,6 +130,13 @@ class TestCase(unittest.TestCase):
         print('mix_list value:')
         pprint(res.get_json())
 
+    # '/aweme/v1/web/familiar/atlist/'
+    def test_get_familiar_atlist(self):
+        # 测试获取熟悉联系人列表（AT列表）
+        res = self.client.get('/aweme/v1/web/familiar/atlist/?count=20&cursor=0&scene=2&group_id=7586334306945207609')
+        print('familiar_atlist value:')
+        pprint(res.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()

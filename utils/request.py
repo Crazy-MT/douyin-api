@@ -159,7 +159,6 @@ class Request(object):
         params = self.get_params(params)
         params["a_bogus"] = self.get_sign(uri, params)
 
-
         # 这个接口必须更改referer的值为当前请求页面的url
         referer_map = {
             '/aweme/v1/web/aweme/related/': f"https://www.douyin.com/video/{params.get('aweme_id')}",
@@ -180,7 +179,7 @@ class Request(object):
             '/aweme/v1/web/mix/list/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/home/search/item/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/seo/inner/link/': f"https://www.douyin.com/user/",
-            '/aweme/v2/web/module/feed/':  f"https://www.douyin.com/jingxuan",
+            '/aweme/v2/web/module/feed/': f"https://www.douyin.com/jingxuan",
         }
         for pattern, referer_value in referer_map.items():
             if pattern == uri:

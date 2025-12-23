@@ -717,3 +717,31 @@ def get_watchlater_list():
     if params:
         return jsonify(params)
     return jsonify({'error': 'Failed to retrieve watchlater_list; Check you Cookie and Referer!'}), 403
+
+
+"""
+@desc: at列表
+@url: /aweme/v1/web/familiar/atlist/
+@param: cursor 20
+@param: count 20
+@param: scene 2
+@param: group_id 7586334306945207609
+"""
+
+
+@api.route('/familiar/atlist/')
+def get_familiar_atlist():
+    count = request.args.get('count')
+    cursor = request.args.get('cursor')
+    scene = request.args.get('scene')
+    group_id = request.args.get('group_id')
+    familiar_atlist = request_instance.getJSON('/aweme/v1/web/familiar/atlist/', {
+        'cursor': cursor,
+        'count': count,
+        'scene': scene,
+        'group_id': group_id,
+        'need_page': 'true'
+    })
+    if familiar_atlist:
+        return jsonify(familiar_atlist)
+    return jsonify({'error': 'Failed to retrieve familiar_atlist; Check you Cookie and Referer!'}), 403
