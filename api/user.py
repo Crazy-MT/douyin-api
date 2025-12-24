@@ -108,20 +108,23 @@ def get_user_post():
 @api.route('/locate/post/')
 def get_user_post_locate():
     sec_user_id = request.args.get('sec_user_id')
-    count = request.args.get('count')
-    max_cursor = request.args.get('max_cursor')
+    count = request.args.get('count', '10')
+    max_cursor = request.args.get('max_cursor', '0')
     locate_item_id = request.args.get('locate_item_id')
     locate_item_cursor = request.args.get('locate_item_cursor')
-    locate_query = request.args.get('locate_query')
+    locate_query = request.args.get('locate_query', 'true')
     url = '/aweme/v1/web/locate/post/'
     params = {
         'sec_user_id': sec_user_id,
-        'count': count,
         'max_cursor': max_cursor,
         'locate_item_id': locate_item_id,
         'locate_item_cursor': locate_item_cursor,
         'locate_query': locate_query,
-        'publish_video_strategy_type': '2'
+        'count': count,
+        'publish_video_strategy_type': '2',
+        'pc_libra_divert': 'Windows',
+        'support_h265': '0',
+        'support_dash': '0',
     }
     post_list = request_instance.getJSON(url, params, data=None, live=None, web2=1)
     if post_list:

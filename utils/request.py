@@ -4,12 +4,14 @@
 @Time    :   2024年07月15日
 @Author  :   erma0
 @Version :   1.1
-@Link    :   https://github.com/ShilongLee/Crawler/blob/main/service/douyin/logic/common.py
+@Link    :   参考   https://github.com/ShilongLee/Crawler/blob/main/service/douyin/logic/common.py
 @Desc    :   抖音sign
 '''
 import os
 import random
 import re
+import subprocess
+import json
 from urllib.parse import quote
 
 # import requests
@@ -107,6 +109,52 @@ class Request(object):
             call_name, query, self.HEADERS.get("User-Agent"))
         return a_bogus
 
+    def get_sign_bdms(self, uri: str, params: dict) -> str:
+        """使用 bdms 方案生成 a_bogus 签名（通过 Node.js 子进程）"""
+        query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
+        url = f'{self.HOST}{uri}?{query}'
+        uifid = self.COOKIES.get('UIFID', '')
+
+        # 使用 subprocess 调用 Node.js
+        js_path = os.path.join(self.filepath, '../lib/index.js')
+        # Windows 路径转为正斜杠，避免转义问题
+        js_path = js_path.replace('\\', '/')
+        js_code = f'''
+const {{ get_a_bogus }} = require("{js_path}");
+const result = get_a_bogus({json.dumps(url)}, {json.dumps(uifid)});
+if (global._process) global.process = global._process;
+console.log(JSON.stringify({{ a_bogus: result }}));
+process.exit(0);
+'''
+        try:
+            result = subprocess.run(
+                ['node', '-e', js_code],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=os.path.dirname(js_path)
+            )
+            if result.returncode == 0:
+                # 从输出中提取 JSON 结果
+                for line in result.stdout.strip().split('\n'):
+                    if line.startswith('{'):
+                        data = json.loads(line)
+                        a_bogus = data.get('a_bogus', '')
+                        if a_bogus:
+                            return a_bogus
+                # 没找到 a_bogus，打印完整输出便于调试
+                print(f"Node.js stdout: {result.stdout}")
+                print(f"Node.js stderr: {result.stderr}")
+            else:
+                print(f"Node.js error (code={result.returncode}):")
+                print(f"  stdout: {result.stdout}")
+                print(f"  stderr: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            print("Node.js timeout")
+        except Exception as e:
+            print(f"Error calling Node.js: {e}")
+        return ''
+
     def get_params(self, params: dict) -> dict:
         params.update(self.PARAMS)
         params['msToken'] = self.get_ms_token()
@@ -157,7 +205,12 @@ class Request(object):
         live_url = f'{self.LIVE_HOST}{uri}'
         web2_url = f'{self.WEB2_HOST}{uri}'
         params = self.get_params(params)
-        params["a_bogus"] = self.get_sign(uri, params)
+        # 特定接口使用 bdms 签名
+        if uri in ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/']:
+            params["a_bogus"] = self.get_sign_bdms(uri, params)
+            print("params['a_bogus']", params["a_bogus"])
+        else:
+            params["a_bogus"] = self.get_sign(uri, params)
 
         # 这个接口必须更改referer的值为当前请求页面的url
         referer_map = {
@@ -166,6 +219,7 @@ class Request(object):
             '/aweme/v1/web/comment/list/reply/': f"https://www.douyin.com/video/{params.get('item_id')}",
             '/aweme/v1/web/user/profile/other/': f"https://www.douyin.com/user/{params.get('sec_user_id')}?",
             '/aweme/v1/web/aweme/post/': f"https://www.douyin.com/user/{params.get('sec_user_id')}?",
+            '/aweme/v1/web/locate/post/': f"https://www.douyin.com/",
             '/aweme/v1/web/im/spotlight/relation/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/user/following/list/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/user/follower/list/': f"https://www.douyin.com/user/",
@@ -185,7 +239,11 @@ class Request(object):
             if pattern == uri:
                 self.HEADERS['referer'] = referer_value
                 break
-        if data:
+
+        # 需要 POST 的接口列表
+        post_uris = ['/aweme/v2/web/module/feed/']
+
+        if data is not None or uri in post_uris:
             bd_client_data = self.COOKIES.get("bd_ticket_guard_client_data", None)
             self.HEADERS["Content-Type"] = "application/x-www-form-urlencoded"
             self.HEADERS["Uifid"] = self.COOKIES.get("UIFID", None)
@@ -194,25 +252,41 @@ class Request(object):
             # self.HEADERS["Bd-Ticket-Guard-Version"] = '2'
             # self.HEADERS["Bd-Ticket-Guard-Iteration-Version"] = '1'
             self.HEADERS["X-Secsdk-Csrf-Token"] = 'DOWNGRADE'
-            print(data)
-            response = self.client.post(
-                url, params=params, data=data, headers=self.HEADERS, cookies=self.COOKIES)
-            # print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
+            # POST 请求时也要判断是否使用 web2
+            if web2:
+                post_headers = self.HEADERS.copy()
+                post_headers['sec-fetch-site'] = 'same-site'
+                post_headers['origin'] = 'https://www.douyin.com'
+                response = self.client.post(
+                    web2_url, params=params, data=data or {}, headers=post_headers, cookies=self.COOKIES)
+                actual_url = web2_url
+            else:
+                response = self.client.post(
+                    url, params=params, data=data or {}, headers=self.HEADERS, cookies=self.COOKIES)
+                actual_url = url
+            print(f'POST url:{response.url}, code:{response.status_code}')
         elif live:
             response = self.client.get(
                 live_url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
-            print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
+            print(f'url:{response.url}, code:{response.status_code}')
+            actual_url = live_url
         elif web2:
+            # web2 请求需要修改 headers（跨子域名）
+            web2_headers = self.HEADERS.copy()
+            web2_headers['sec-fetch-site'] = 'same-site'
+            web2_headers['origin'] = 'https://www.douyin.com'
             response = self.client.get(
-                web2_url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
-            print(f'url:{response.url}, header:{self.HEADERS}，body:{response.text}，code:{response.status_code}')
+                web2_url, params=params, headers=web2_headers, cookies=self.COOKIES)
+            print(f'url:{response.url}, code:{response.status_code}')
+            actual_url = web2_url
         else:
             response = self.client.get(
                 url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
             # print(f'url:{response.url}, header:{self.HEADERS}')
+            actual_url = url
         if response.status_code != 200 or response.text == '':
             logger.error(
-                f'JSON请求失败：url: {url},  params: {params},header: {self.HEADERS}, code: {response.status_code}, body: {response}')
+                f'JSON请求失败：url: {actual_url},  params: {params},header: {self.HEADERS}, code: {response.status_code}, body: {response.text[:500] if response.text else "empty"}')
             return {}
         return response.json()
 

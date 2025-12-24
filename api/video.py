@@ -122,32 +122,39 @@ def get_reply_list():
 
 @api.route('/module/feed/')
 def get_module_feed():
-    count = request.args.get('count')
-    refresh_index = request.args.get('refresh_index')
-    tag_id = request.args.get('tag_id')
-    presented_ids = request.args.get('presented_ids')
-    filter_gids = request.args.get('filter_gids')
-    is_active_tab = request.args.get('is_active_tab')
-    data= {
-
+    count = request.args.get('count', '20')
+    refresh_index = request.args.get('refresh_index', '1')
+    tag_id = request.args.get('tag_id', '')
+    presented_ids = request.args.get('presented_ids', '')
+    filter_gids = request.args.get('filter_gids', '')
+    is_active_tab = request.args.get('is_active_tab', 'false')
+    active_id = request.args.get('active_id', '')
+    params = {
+        'module_id': '3003101',
+        'count': count,
+        'filterGids': filter_gids,
+        'presented_ids': presented_ids,
+        'refresh_index': refresh_index,
+        'refer_id': '',
+        'refer_type': '10',
+        'pull_type': '2',
+        'awemePcRecRawData': '{"is_xigua_user":0,"danmaku_switch_status":1,"is_client":false}',
+        'Seo-Flag': '0',
+        'install_time': str(int(__import__('time').time()) - 86400),
+        'tag_id': tag_id,
+        'active_id': active_id,
+        'is_active_tab': is_active_tab,
+        'use_lite_type': '0',
+        'xigua_user': '0',
+        'pc_libra_divert': 'Windows',
+        'support_h265': '0',
+        'support_dash': '0',
     }
-    params = {'count': count,
-              'video_type_select': '1',
-              'module_id': '3003101',
-              'filterGids': filter_gids,
-              'refer_id': '',
-              'refer_type': '10',
-              'pull_type': 'w',
-              'tag_id': tag_id,
-              "is_active_tab": is_active_tab,
-              "aweme_pc_rec_raw_data": '{"is_xigua_user":0,"danmaku_switch_status":0,"is_client":false}',
-              "refresh_index": refresh_index,
-              'presented_ids': presented_ids,
-              }
     url = '/aweme/v2/web/module/feed/'
-    aweme_list = request_instance.getJSON(url, params, data)
+    aweme_list = request_instance.getJSON(url, params)
     if aweme_list:
         return jsonify(aweme_list)
+    return jsonify({'status_code': -1, 'message': '请求失败'})
 
 
 '''
@@ -197,7 +204,7 @@ def post_digg():
         'type': digg_type,
         'item_type': item_type
     }
-    commit_digg = request_instance.getJSON(url, params, data)
+    commit_digg = request_instance.getJSON(url, params, data, live=None, web2=1)
     if commit_digg:
         return jsonify(commit_digg)
     else:

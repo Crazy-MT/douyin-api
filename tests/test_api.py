@@ -88,7 +88,7 @@ class TestCase(unittest.TestCase):
 
     # '/aweme/v2/web/module/feed/'
     def test_get_module_feed(self):
-        res = self.client.get('/aweme/v2/web/module/feed/?count=10&refresh_index=1')
+        res = self.client.get('/aweme/v2/web/module/feed/?count=20&refresh_index=1')
         self.assertEqual(res.status_code, 200)
         print('module_feed value:')
         pprint(res.get_json())
