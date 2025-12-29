@@ -7,20 +7,21 @@
 @Link    :   参考   https://github.com/ShilongLee/Crawler/blob/main/service/douyin/logic/common.py
 @Desc    :   抖音sign
 '''
+import json
 import os
 import random
 import re
 import subprocess
-import json
 from urllib.parse import quote
-
-# import requests
 
 import httpx
 from loguru import logger
 
 from utils.cookies import get_cookie_dict
 from utils.execjs_fix import execjs
+
+
+# import requests
 
 
 class Request(object):
@@ -207,7 +208,7 @@ process.exit(0);
         params = self.get_params(params)
         # 特定接口使用 bdms 签名
         if uri in ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/']:
-            params["a_bogus"] = self.get_sign_bdms(uri, params)
+            params["a_bogus"] = self.get_sign_bdms(web2_url, params)
             print("params['a_bogus']", params["a_bogus"])
         else:
             params["a_bogus"] = self.get_sign(uri, params)
