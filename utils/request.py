@@ -207,7 +207,8 @@ process.exit(0);
         web2_url = f'{self.WEB2_HOST}{uri}'
         params = self.get_params(params)
         # 特定接口使用 bdms 签名
-        if uri in ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/']:
+        if uri in ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/',
+                   '/aweme/v1/web/aweme/favorite/']:
             params["a_bogus"] = self.get_sign_bdms(web2_url, params)
             print("params['a_bogus']", params["a_bogus"])
         else:
@@ -224,7 +225,7 @@ process.exit(0);
             '/aweme/v1/web/im/spotlight/relation/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/user/following/list/': f"https://www.douyin.com/user/",
             '/aweme/v1/web/user/follower/list/': f"https://www.douyin.com/user/",
-            '/aweme/v1/web/aweme/favorite/': f"https://www.douyin.com/user/",
+            '/aweme/v1/web/aweme/favorite/': f"https://www.douyin.com/",
             '/aweme/v1/web/aweme/listcollection/': f"https://www.douyin.com/user/self?from_tab_name=main&showTab=favorite_collection",
             '/aweme/v1/web/music/listcollection/': f"https://www.douyin.com/user/self?from_tab_name=main&showSubTab=music&showTab=favorite_collection",
             '/aweme/v1/web/collects/video/list/': f"https://www.douyin.com/user/self?from_tab_name=main&showSubTab=favorite_folder&showTab=favorite_collection",

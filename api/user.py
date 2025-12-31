@@ -153,7 +153,7 @@ def get_user_favorite():
         'min_cursor': min_cursor,
         'publish_video_strategy_type': '2'
     }
-    favorite_list = request_instance.getJSON(url, params)
+    favorite_list = request_instance.getJSON(url, params, data=None, live=None, web2=1)
     if favorite_list:
         return jsonify(favorite_list)
     else:
