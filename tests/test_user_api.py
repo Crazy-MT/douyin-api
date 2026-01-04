@@ -68,7 +68,7 @@ class TestUserAPI(unittest.TestCase):
         """测试获取用户作品当前视频列表 /aweme/v1/web/locate/post/"""
         response = self.client.get(
             f'/aweme/v1/web/locate/post/'
-            f'?sec_user_id={self.test_sec_user_id}'
+            f'?sec_user_id=MS4wLjABAAAA3q_M7SAG4eQnFrskafFBDLnycg_2s21oi7Q_aI42C2Q'
             f'&count=10'
             f'&max_cursor=0'
             f'&locate_query=true'
@@ -84,7 +84,7 @@ class TestUserAPI(unittest.TestCase):
         response = self.client.get(
             f'/aweme/v1/web/aweme/favorite/'
             f'?sec_user_id={self.test_sec_user_id}'
-            f'&count=10'
+            f'&count=18'
             f'&max_cursor=0'
             f'&min_cursor=0'
         )

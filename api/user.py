@@ -123,16 +123,18 @@ def get_user_post_locate():
 @api.route('/aweme/favorite/')
 def get_user_favorite():
     sec_user_id = request.args.get('sec_user_id')
-    count = request.args.get('count')
-    min_cursor = request.args.get('min_cursor')
-    max_cursor = request.args.get('max_cursor')
+    count = request.args.get('count', '18')
+    min_cursor = request.args.get('min_cursor', '0')
+    max_cursor = request.args.get('max_cursor', '0')
     url = '/aweme/v1/web/aweme/favorite/'
     params = {
         'sec_user_id': sec_user_id,
         'count': count,
         'max_cursor': max_cursor,
         'min_cursor': min_cursor,
-        'publish_video_strategy_type': '2'
+        'whale_cut_token': '',
+        'cut_version': '1',
+        'publish_video_strategy_type': '2',
     }
     return make_response(request_instance.getJSON(url, params, data=None, live=None, web2=1))
 
@@ -648,3 +650,34 @@ def get_familiar_atlist():
         'need_page': 'true'
     }
     return make_response(request_instance.getJSON(url, params))
+
+
+"""
+@desc: 获取qrcode
+@url: /aweme/v1/web/fancy/qrcode/info/
+@param: app_name aweme
+
+post 参数
+@param: schema_type 4
+@param: object_id  75389470922 用户短id
+@param  qrcode_type 1  二维码类型
+"""
+
+
+@api.route('/fancy/qrcode/info/')
+def get_fancy_qrcode_info():
+    app_name = request.args.get('app_name')
+    object_id = request.args.get('object_id')
+    schema_type = request.args.get('schema_type')
+    qrcode_type = request.args.get('qrcode_type')
+    url = '/aweme/v1/web/fancy/qrcode/info/'
+    params = {
+        'app_name': app_name,
+    }
+    data = {
+        'app_name': app_name,
+        'schema_type': schema_type,
+        'object_id': object_id,
+        'qrcode_type': qrcode_type
+    }
+    return make_response(request_instance.getJSON(url, params, data))

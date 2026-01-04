@@ -110,10 +110,16 @@ class Request(object):
             call_name, query, self.HEADERS.get("User-Agent"))
         return a_bogus
 
-    def get_sign_bdms(self, uri: str, params: dict) -> str:
-        """使用 bdms 方案生成 a_bogus 签名（通过 Node.js 子进程）"""
+    def get_sign_bdms(self, full_url: str, params: dict) -> str:
+        """使用 bdms 方案生成 a_bogus 签名（通过 Node.js 子进程）
+
+        Args:
+            full_url: 完整的请求 URL（包含域名，如 https://www-hj.douyin.com/aweme/v1/...）
+            params: 请求参数字典
+        """
         query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
-        url = f'{self.HOST}{uri}?{query}'
+        # full_url 已经包含完整域名，直接拼接参数
+        url = f'{full_url}?{query}'
         uifid = self.COOKIES.get('UIFID', '')
 
         # 使用 subprocess 调用 Node.js
@@ -207,9 +213,17 @@ process.exit(0);
         web2_url = f'{self.WEB2_HOST}{uri}'
         params = self.get_params(params)
         # 特定接口使用 bdms 签名
-        if uri in ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/',
-                   '/aweme/v1/web/aweme/favorite/']:
-            params["a_bogus"] = self.get_sign_bdms(web2_url, params)
+        # 注意：签名URL必须与实际请求URL一致
+        bdms_uris = ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/',
+                     '/aweme/v1/web/commit/item/digg/', '/aweme/v1/web/aweme/favorite/']
+        if uri in bdms_uris:
+            # module/feed 是 POST 请求，不使用 web2 域名
+            # 其他需要 web2 的接口用 web2_url
+            if uri == '/aweme/v2/web/module/feed/':
+                sign_url = url  # www.douyin.com
+            else:
+                sign_url = web2_url  # www-hj.douyin.com
+            params["a_bogus"] = self.get_sign_bdms(sign_url, params)
             print("params['a_bogus']", params["a_bogus"])
         else:
             params["a_bogus"] = self.get_sign(uri, params)
@@ -277,6 +291,16 @@ process.exit(0);
             web2_headers = self.HEADERS.copy()
             web2_headers['sec-fetch-site'] = 'same-site'
             web2_headers['origin'] = 'https://www.douyin.com'
+            # 敏感接口（如 favorite）需要额外的 header
+            if uri in ['/aweme/v1/web/aweme/favorite/', '/aweme/v1/web/locate/post/']:
+                web2_headers['uifid'] = self.COOKIES.get('UIFID', '')
+                web2_headers['x-secsdk-csrf-token'] = 'DOWNGRADE'
+                # bd-ticket-guard 相关 header（重要！用于验证请求合法性）
+                bd_client_data = self.COOKIES.get('bd_ticket_guard_client_data', '')
+                if bd_client_data:
+                    web2_headers['bd-ticket-guard-client-data'] = bd_client_data
+                    web2_headers['bd-ticket-guard-version'] = '2'
+                    web2_headers['bd-ticket-guard-web-version'] = '1'
             response = self.client.get(
                 web2_url, params=params, headers=web2_headers, cookies=self.COOKIES)
             print(f'url:{response.url}, code:{response.status_code}')
