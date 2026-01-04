@@ -286,11 +286,18 @@ process.exit(0);
                 url, params=params, headers=self.HEADERS, cookies=self.COOKIES)
             # print(f'url:{response.url}, header:{self.HEADERS}')
             actual_url = url
-        if response.status_code != 200 or response.text == '':
+        # 尝试解析 JSON 响应
+        try:
+            json_data = response.json() if response.text else {}
+        except Exception:
+            json_data = {'error': 'Invalid JSON response', 'raw': response.text[:500] if response.text else ''}
+
+        if response.status_code != 200:
             logger.error(
-                f'JSON请求失败：url: {actual_url},  params: {params},header: {self.HEADERS}, code: {response.status_code}, body: {response.text[:500] if response.text else "empty"}')
-            return {}
-        return response.json()
+                f'JSON请求失败：url: {actual_url}, params: {params}, header: {self.HEADERS}, code: {response.status_code}, body: {response.text[:500] if response.text else "empty"}')
+
+        # 返回元组：(数据, HTTP状态码)，让调用方可以直接使用
+        return json_data, response.status_code
 
 
 if __name__ == "__main__":

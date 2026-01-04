@@ -1,6 +1,6 @@
-from . import api
+from . import api, make_response
 from utils.request import Request
-from flask import request, jsonify
+from flask import request
 
 request_instance = Request()  # 创建 Request 类的实例
 
@@ -82,11 +82,7 @@ def get_search():
         params['filter_selected'] = filter_selected
 
     print(params)
-    search_data = request_instance.getJSON(url, params)
-    if search_data:
-        return jsonify(search_data)
-    else:
-        return jsonify({'error': 'Failed to retrieve search_data; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -113,11 +109,8 @@ def get_suggest_words():
     if query is not None and query != '':
         params['query'] = query
 
-    suggest_words = request_instance.getJSON(url, params)
-    if suggest_words:
-        return jsonify(suggest_words)
-    else:
-        return jsonify({'error': 'Failed to retrieve suggest_words; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
+
 
 """
 @desc: 搜索推荐
@@ -126,6 +119,8 @@ def get_suggest_words():
 @param: source
 @param: from_group_id
 """
+
+
 @api.route('/search/sug/')
 def get_search_sug():
     keyword = request.args.get('keyword')
@@ -137,8 +132,4 @@ def get_search_sug():
         'source': 'aweme_video_web',
         'from_group_id': '7585517202867047720'
     }
-    search_sug = request_instance.getJSON(url, params)
-    if search_sug:
-        return jsonify(search_sug)
-    else:
-        return jsonify({'error': 'Failed to retrieve search_sug; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))

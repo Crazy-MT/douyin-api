@@ -1,5 +1,5 @@
-from . import api
-from flask import jsonify, request
+from . import api, make_response
+from flask import request
 from utils.request import Request
 
 request_instance = Request()  # 创建 Request 类的实例
@@ -14,15 +14,10 @@ request_instance = Request()  # 创建 Request 类的实例
 def get_detail():
     aweme_id = request.args.get('aweme_id')
     if not aweme_id:
-        return jsonify({'error': 'Missing aweme_id parameter'}), 400
+        return {'error': 'Missing aweme_id parameter'}, 400
     params = {"aweme_id": aweme_id}
     url = '/aweme/v1/web/aweme/detail/'
-    aweme_detail = request_instance.getJSON(url, params)  # 直接调用 getJSON 方法
-    if aweme_detail:
-        return jsonify(aweme_detail)
-    else:
-        api.logger.error('Failed to retrieve aweme detail for aweme_id: %s', aweme_id)
-        return jsonify({'error': 'Failed to retrieve aweme detail; Check you Cookie!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -34,7 +29,7 @@ def get_detail():
 示例：filterGids: 7380308118061780287,7386945509082025225,
 7386952050208247080,7379532523379903795,7379995831534947618,7360577857900350746,7391047134314908982,
 7391866100910247207,7405446866906729782
-@param： refresh_index  第一次：1 
+@param： refresh_index  第一次：1
 """
 
 
@@ -45,15 +40,13 @@ def get_related():
     filter_gids = request.args.get('filterGids')
     refresh_index = request.args.get('refresh_index')
     if not aweme_id:
-        return jsonify({'error': 'Missing aweme_id parameter'}), 400
+        return {'error': 'Missing aweme_id parameter'}, 400
     params = {"aweme_id": aweme_id, "count": count, "filterGids": filter_gids,
               "awemePcRecRawData": '{"is_client":false}', "sub_channel_id": 0, "Seo-Flag": 0,
               "refresh_index": refresh_index
               }
     url = '/aweme/v1/web/aweme/related/'
-    aweme_list = request_instance.getJSON(url, params)
-    if aweme_list:
-        return jsonify(aweme_list)
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -75,12 +68,7 @@ def get_comment_list():
         "count": count
     }
     url = '/aweme/v1/web/comment/list/'
-    comment_list = request_instance.getJSON(url, params)
-    if comment_list:
-        return jsonify(comment_list)
-    else:
-        api.logger.error('Failed to retrieve comment list for aweme_id: %s url: %s', aweme_id, url)
-        return jsonify({'error': 'Failed to retrieve comment list; Check you Cookie!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -106,12 +94,7 @@ def get_reply_list():
         "count": count
     }
     url = '/aweme/v1/web/comment/list/reply/'
-    comment_list = request_instance.getJSON(url, params)
-    if comment_list:
-        return jsonify(comment_list)
-    else:
-        api.logger.error('Failed to retrieve comment list for aweme_id: %s url: %s', item_id, url)
-        return jsonify({'error': 'Failed to retrieve comment list; Check you Cookie!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -155,10 +138,7 @@ def get_module_feed():
         'support_dash': '0',
     }
     url = '/aweme/v2/web/module/feed/'
-    aweme_list = request_instance.getJSON(url, params)
-    if aweme_list:
-        return jsonify(aweme_list)
-    return jsonify({'status_code': -1, 'message': '请求失败'})
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -179,9 +159,7 @@ def get_tab_feed():
               "refresh_index": refresh_index
               }
     url = '/aweme/v1/web/tab/feed/'
-    aweme_list = request_instance.getJSON(url, params)
-    if aweme_list:
-        return jsonify(aweme_list)
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -189,7 +167,7 @@ def get_tab_feed():
 @url: /aweme/v1/web/commit/item/digg/
 @param: aweme_id 视频id 必须
 @param: type 点赞类型 1 点赞 0 取消
-@param： item_type 暂未知道含义 默认为0 
+@param： item_type 暂未知道含义 默认为0
 """
 
 
@@ -208,8 +186,4 @@ def post_digg():
         'type': digg_type,
         'item_type': item_type
     }
-    commit_digg = request_instance.getJSON(url, params, data, live=None, web2=1)
-    if commit_digg:
-        return jsonify(commit_digg)
-    else:
-        return jsonify({'error': 'Failed to retrieve  collection_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params, data, live=None, web2=1))

@@ -1,6 +1,6 @@
-from . import api
+from . import api, make_response
 from utils.request import Request
-from flask import request, jsonify
+from flask import request
 
 request_instance = Request()  # 创建 Request 类的实例
 
@@ -16,11 +16,7 @@ def get_seo_link():
     params = {
         'channel': 'channel_pc_web'
     }
-    seo_link = request_instance.getJSON(url, params)
-    if seo_link:
-        return jsonify(seo_link)
-    else:
-        return jsonify({'error': 'Failed to retrieve seo_link; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -35,11 +31,7 @@ def get_emoji_list():
     params = {
         'channel': 'channel_pc_web'
     }
-    emoji_list = request_instance.getJSON(url, params)
-    if emoji_list:
-        return jsonify(emoji_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve emoji_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -57,11 +49,7 @@ def get_emoticon_list():
         'cursor': cursor,
         'count': count
     }
-    emoticon_list = request_instance.getJSON(url, params)
-    if emoticon_list:
-        return jsonify(emoticon_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve emoticon_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -73,29 +61,21 @@ def get_emoticon_list():
 @api.route('hot/search/list/')
 def get_hot_list():
     url = '/aweme/v1/web/hot/search/list/'
-    cursor = request.args.get('cursor')
-    count = request.args.get('count')
     params = {
     }
-    hot_list = request_instance.getJSON(url, params)
-    if hot_list:
-        return jsonify(hot_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve emoticon_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
 @desc: 精选页标签
 @url： /aweme/v1/web/home/channel/setting/
 '''
+
+
 @api.route('/home/channel/setting/')
 def get_channel_setting():
     url = '/aweme/v1/web/home/channel/setting/'
     params = {
         'channel': 'channel_pc_web'
     }
-    channel_setting = request_instance.getJSON(url, params)
-    if channel_setting:
-        return jsonify(channel_setting)
-    else:
-        return jsonify({'error': 'Failed to retrieve channel_setting; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))

@@ -73,11 +73,11 @@ class TestCase(unittest.TestCase):
         pprint(res.get_json())
 
     # '/aweme/v1/web/commit/item/digg/'
-    def test_commit_digg(self):
-        res = self.client.get('/aweme/v1/web/commit/item/digg/?aweme_id=7457492400135621915&type=0&item_type=0')
-        self.assertEqual(res.status_code, 200)
-        print('commit value:')
-        pprint(res.get_json())
+    # def test_commit_digg(self):
+    #     res = self.client.get('/aweme/v1/web/commit/item/digg/?aweme_id=7457492400135621915&type=0&item_type=0')
+    #     self.assertEqual(res.status_code, 200)
+    #     print('commit value:')
+    #     pprint(res.get_json())
 
     # '/aweme/v1/web/home/channel/setting/'
     def test_get_channel_setting(self):

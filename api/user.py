@@ -1,6 +1,6 @@
 from utils.request import Request
-from . import api
-from flask import request, jsonify
+from . import api, make_response
+from flask import request
 
 request_instance = Request()  # 创建 Request 类的实例
 '''
@@ -12,14 +12,8 @@ request_instance = Request()  # 创建 Request 类的实例
 @api.route('/user/profile/self/')
 def get_user_info_self():
     url = '/aweme/v1/web/user/profile/self/'
-    params = {
-
-    }
-    user_info = request_instance.getJSON(url, params)
-    if user_info:
-        return jsonify(user_info)
-    else:
-        return jsonify({'error': 'Failed to retrieve userinfo; Check you Cookie and Referer!'}), 403
+    params = {}
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -38,17 +32,13 @@ def get_user_info():
         'publish_video_strategy_type': '2',
         'personal_center_strategy': '1'
     }
-    user_info = request_instance.getJSON(url, params)
-    if user_info:
-        return jsonify(user_info)
-    else:
-        return jsonify({'error': 'Failed to retrieve userinfo; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
 @desc: 获取用户作品列表
 @url：/aweme/v1/web/aweme/post/
-@param: forward_end_cursor 上一个接口的max_cursor 
+@param: forward_end_cursor 上一个接口的max_cursor
 @param: sec_user_id 用户id
 @param: max_cursor 游标
 @param: count 每页数量
@@ -85,12 +75,7 @@ def get_user_post():
     }
     if forward_end_cursor:
         params["forward_end_cursor"] = forward_end_cursor
-
-    post_list = request_instance.getJSON(url, params)
-    if post_list:
-        return jsonify(post_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve post_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -126,11 +111,7 @@ def get_user_post_locate():
         'support_h265': '0',
         'support_dash': '0',
     }
-    post_list = request_instance.getJSON(url, params, data=None, live=None, web2=1)
-    if post_list:
-        return jsonify(post_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve post_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params, data=None, live=None, web2=1))
 
 
 """
@@ -153,11 +134,7 @@ def get_user_favorite():
         'min_cursor': min_cursor,
         'publish_video_strategy_type': '2'
     }
-    favorite_list = request_instance.getJSON(url, params, data=None, live=None, web2=1)
-    if favorite_list:
-        return jsonify(favorite_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve favorite_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params, data=None, live=None, web2=1))
 
 
 """
@@ -172,18 +149,12 @@ def get_list_collection():
     cursor = request.args.get('cursor')
 
     url = '/aweme/v1/web/aweme/listcollection/'
-    params = {
-
-    }
+    params = {}
     data = {
         'count': count,
         'cursor': cursor
     }
-    collection_list = request_instance.getJSON(url, params, data)
-    if collection_list:
-        return jsonify(collection_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  collection_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params, data))
 
 
 """
@@ -204,11 +175,7 @@ def get_list_collection_music():
         'count': count,
         'cursor': cursor
     }
-    music_list = request_instance.getJSON(url, params)
-    if music_list:
-        return jsonify(music_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  music_list; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -229,11 +196,7 @@ def get_list_collects():
         'count': count,
         'cursor': cursor
     }
-    collects_list = request_instance.getJSON(url, params)
-    if collects_list:
-        return jsonify(collects_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  collects_list; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -256,11 +219,7 @@ def get_list_collects_video():
         'count': count,
         'cursor': cursor
     }
-    collects_video_list = request_instance.getJSON(url, params)
-    if collects_video_list:
-        return jsonify(collects_video_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  collects_video_list; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -279,11 +238,7 @@ def get_list_collection_mix():
         'count': count,
         'cursor': cursor
     }
-    mix_list = request_instance.getJSON(url, params)
-    if mix_list:
-        return jsonify(mix_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  mix_list; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -302,11 +257,7 @@ def get_list_collection_series():
         'count': count,
         'cursor': cursor
     }
-    series_list = request_instance.getJSON(url, params)
-    if series_list:
-        return jsonify(series_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  series_list; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -331,11 +282,7 @@ def get_mix_list():
         'cursor': cursor,
         'req_from': 'channel_pc_web'
     }
-    mix_list = request_instance.getJSON(url, params)
-    if mix_list:
-        return jsonify(mix_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  mix_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -352,11 +299,7 @@ def get_mix_detail():
     params = {
         'mix_id': mix_id
     }
-    mix_detail = request_instance.getJSON(url, params)
-    if mix_detail:
-        return jsonify(mix_detail)
-    else:
-        return jsonify({'error': 'Failed to retrieve  mix_detail; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -377,11 +320,7 @@ def get_mix_list_detail():
         'count': count,
         'cursor': cursor,
     }
-    mix_list_detail = request_instance.getJSON(url, params)
-    if mix_list_detail:
-        return jsonify(mix_list_detail)
-    else:
-        return jsonify({'error': 'Failed to retrieve  mix_list_detail; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -402,11 +341,7 @@ def get_view_user_visited_list():
         'count': count,
         'cursor': cursor
     }
-    view_user_visited_list = request_instance.getJSON(url, params, data)
-    if view_user_visited_list:
-        return jsonify(view_user_visited_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve  view_user_visited_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params, data))
 
 
 """
@@ -434,11 +369,7 @@ def get_history_read():
         'category': category,
         'status': status
     }
-    history_read = request_instance.getJSON(url, params)
-    if history_read:
-        return jsonify(history_read)
-    else:
-        return jsonify({'error': 'Failed to retrieve  history_read; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -457,11 +388,7 @@ def get_lvideo_history_read():
         'count': count,
         'cursor': cursor
     }
-    lvideo_history = request_instance.getJSON(url, params)
-    if lvideo_history:
-        return jsonify(lvideo_history)
-    else:
-        return jsonify({'error': 'Failed to retrieve  history_read; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -481,11 +408,7 @@ def get_webcast_history_read():
         'source_key': 'drawer_hot_live_history',
         'need_map': 1
     }
-    webcast_history = request_instance.getJSON(url, params)
-    if webcast_history:
-        return jsonify(webcast_history)
-    else:
-        return jsonify({'error': 'Failed to retrieve  history_read; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -516,11 +439,7 @@ def get_relation():
         'need_sorted_info': 'true',
         'with_fstatus': '1'
     }
-    relation = request_instance.getJSON(url, params)
-    if relation:
-        return jsonify(relation)
-    else:
-        return jsonify({'error': 'Failed to retrieve relation; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -552,11 +471,7 @@ def get_user_following():
         'address_book_access': '0',
         'is_top': '1',
     }
-    following_list = request_instance.getJSON(url, params)
-    if following_list:
-        return jsonify(following_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve following_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -587,11 +502,7 @@ def get_user_follower():
         'address_book_access': '0',
         'is_top': '1',
     }
-    follower_list = request_instance.getJSON(url, params)
-    if follower_list:
-        return jsonify(follower_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve follower_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -631,11 +542,7 @@ def get_search_item():
         'enable_history': enable_history,
         'search_id': ''
     }
-    search_item = request_instance.getJSON(url, params)
-    if search_item:
-        return jsonify(search_item)
-    else:
-        return jsonify({'error': 'Failed to retrieve search_item; Check you Cookie and Referer!'}), 404
+    return make_response(request_instance.getJSON(url, params))
 
 
 '''
@@ -690,11 +597,7 @@ def get_follow_feed():
         'aweme_ids': aweme_ids,
         'room_ids': room_ids,
     }
-    follower_list = request_instance.getJSON(url, params)
-    if follower_list:
-        return jsonify(follower_list)
-    else:
-        return jsonify({'error': 'Failed to retrieve follower_list; Check you Cookie and Referer!'}), 403
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -712,14 +615,12 @@ def get_watchlater_list():
     list_type = request.args.get('list_type')
     operate_type = request.args.get('operate_type')
     url = '/aweme/v1/web/watchlater/list/'
-    params = request_instance.getJSON(url, {
+    params = {
         'offset': offset,
         'list_type': list_type,
         'operate_type': operate_type,
-    })
-    if params:
-        return jsonify(params)
-    return jsonify({'error': 'Failed to retrieve watchlater_list; Check you Cookie and Referer!'}), 403
+    }
+    return make_response(request_instance.getJSON(url, params))
 
 
 """
@@ -738,13 +639,12 @@ def get_familiar_atlist():
     cursor = request.args.get('cursor')
     scene = request.args.get('scene')
     group_id = request.args.get('group_id')
-    familiar_atlist = request_instance.getJSON('/aweme/v1/web/familiar/atlist/', {
+    url = '/aweme/v1/web/familiar/atlist/'
+    params = {
         'cursor': cursor,
         'count': count,
         'scene': scene,
         'group_id': group_id,
         'need_page': 'true'
-    })
-    if familiar_atlist:
-        return jsonify(familiar_atlist)
-    return jsonify({'error': 'Failed to retrieve familiar_atlist; Check you Cookie and Referer!'}), 403
+    }
+    return make_response(request_instance.getJSON(url, params))
