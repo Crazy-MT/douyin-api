@@ -350,6 +350,29 @@ class TestUserAPI(unittest.TestCase):
         pprint(response.get_json())
         self.assertIn(response.status_code, [200, 403])
 
+    # ===================== 短剧列表接口 =====================
+    def test_get_short_list(self):
+        """测试获取短剧列表 /aweme/v1/web/series/list/"""
+        response = self.client.get(
+            f'/aweme/v1/web/series/list/?cursor=0&count=20&sec_user_id={self.test_sec_user_id}'
+        )
+        print('Short List Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
+    # ===================== 用户私密作品接口 =====================
+    def test_get_user_private_post(self):
+        """测试获取用户私密作品 /aweme/v1/web/private/aweme/"""
+        response = self.client.get(
+            f'/aweme/v1/web/private/aweme/'
+            f'?count=18'
+            f'&max_cursor=0'
+            f'&min_cursor=0'
+        )
+        print('User Private Post Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
 
 if __name__ == '__main__':
     unittest.main()

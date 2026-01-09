@@ -79,6 +79,30 @@ def get_user_post():
 
 
 """
+@desc: 获取用户私密作品列表
+@url: /aweme/v1/web/private/aweme/
+@param: min_cursor 游标
+@param: max_cursor 游标
+@param: count 每页数量
+"""
+
+
+@api.route('/private/aweme/')
+def get_user_private_post():
+    min_cursor = request.args.get('min_cursor')
+    max_cursor = request.args.get('max_cursor')
+    count = request.args.get('count')
+    url = '/aweme/v1/web/private/aweme/'
+    params = {
+        'min_cursor': min_cursor,
+        'max_cursor': max_cursor,
+        'count': count,
+        'pc_client_type': '1'
+    }
+    return make_response(request_instance.getJSON(url, params))
+
+
+"""
 @desc: 获取用户作品列表当前的视频列表
 @url: /aweme/v1/web/locate/post/
 @param: sec_user_id 用户id
@@ -276,13 +300,15 @@ def get_mix_list():
     sec_user_id = request.args.get('sec_user_id')
     count = request.args.get('count')
     cursor = request.args.get('cursor')
+    list_scene = request.args.get('list_scene')
 
     url = '/aweme/v1/web/mix/list/'
     params = {
         'sec_user_id': sec_user_id,
         'count': count,
         'cursor': cursor,
-        'req_from': 'channel_pc_web'
+        'req_from': 'channel_pc_web',
+        'list_scene': list_scene
     }
     return make_response(request_instance.getJSON(url, params))
 
@@ -543,6 +569,33 @@ def get_search_item():
         'keyword': keyword,
         'enable_history': enable_history,
         'search_id': ''
+    }
+    return make_response(request_instance.getJSON(url, params))
+
+
+'''
+@desc: 查询当前用户的短剧列表
+@url: /aweme/v1/web/series/list/
+@url2: /aweme/v1/web/activity/pull/carnival/  暂时不知道做什么的
+@method: get
+@param: sec_user_id
+@param: cursor 0
+@param: count 10
+@param: req_from channel_pc_web
+'''
+
+
+@api.route('/series/list/')
+def get_series_list():
+    sec_user_id = request.args.get('sec_user_id')
+    cursor = request.args.get('cursor')
+    count = request.args.get('count')
+    url = '/aweme/v1/web/series/list/'
+    params = {
+        'sec_user_id': sec_user_id,
+        'cursor': cursor,
+        'count': count,
+        'req_from': 'channel_pc_web'
     }
     return make_response(request_instance.getJSON(url, params))
 
