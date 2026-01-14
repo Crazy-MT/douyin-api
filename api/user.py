@@ -486,6 +486,7 @@ def get_user_following():
     offset = request.args.get('offset')
     min_time = request.args.get('min_time')
     max_time = request.args.get('max_time')
+    is_top = request.args.get('is_top')
     url = '/aweme/v1/web/user/following/list/'
     params = {
         'user_id': user_id,
@@ -497,7 +498,7 @@ def get_user_following():
         'source_type': source_type,
         'gps_access': '0',
         'address_book_access': '0',
-        'is_top': '1',
+        'is_top': is_top,
     }
     return make_response(request_instance.getJSON(url, params))
 

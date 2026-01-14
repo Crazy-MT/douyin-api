@@ -1,11 +1,14 @@
 from flask import Flask
 from api import api as api_blueprint
+from api.direct_api import direct_api as direct_blueprint
 from flask_cors import CORS
 
 app = Flask(__name__)
 app.register_blueprint(api_blueprint, url_prefix='/aweme/v1/web')
 # 精选页面使用/aweme/v2/web
 app.register_blueprint(api_blueprint, url_prefix='/aweme/v2/web', name='api_v2')
+# 注册无前缀的直播API蓝图
+app.register_blueprint(direct_blueprint)
 
 CORS(app, origins='*', supports_credentials=True)  # 解决跨域问题
 

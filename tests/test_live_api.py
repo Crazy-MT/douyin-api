@@ -33,6 +33,22 @@ class TestLiveAPI(unittest.TestCase):
         pprint(response.get_json())
         self.assertIn(response.status_code, [200, 403])
 
+    # ==================== 直播关注feed接口 ====================
+
+    def test_get_live_feed_follow(self):
+        """测试获取直播关注feed /webcast/web/feed/follow/"""
+        # 测试带scene参数的请求
+        response = self.client.get('/webcast/web/feed/follow/?scene=aweme_pc_follow_top')
+        print('Webcast Feed Follow Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
+        # 测试不带scene参数的请求（应该使用默认值）
+        response_default = self.client.get('/webcast/web/feed/follow/')
+        print('Webcast Feed Follow Default Response:')
+        pprint(response_default.get_json())
+        self.assertIn(response_default.status_code, [200, 403])
+
 
 if __name__ == '__main__':
     unittest.main()
