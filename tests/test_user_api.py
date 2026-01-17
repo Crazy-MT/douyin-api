@@ -214,6 +214,20 @@ class TestUserAPI(unittest.TestCase):
         pprint(response.get_json())
         self.assertIn(response.status_code, [200, 403])
 
+    # ==================== 直播观看历史接口 ====================
+
+    def test_get_webcast_history_read(self):
+        """测试获取直播观看历史 /aweme/v1/web/webcast/feed/"""
+        import time
+        current_time = int(time.time())
+        response = self.client.get(
+            f'/aweme/v1/web/webcast/feed/'
+            f'?max_time={current_time}'
+        )
+        print('Webcast History Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
     # ==================== 用户关系接口 ====================
 
     def test_get_relation(self):
@@ -370,6 +384,40 @@ class TestUserAPI(unittest.TestCase):
             f'&min_cursor=0'
         )
         print('User Private Post Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
+    # ==================== 音乐详情接口 ====================
+    
+    def test_get_music_detail(self):
+        """测试获取音乐详情 /aweme/v1/web/music/detail/"""
+        # 需要真实的 music_id
+        response = self.client.get(
+            '/aweme/v1/web/music/detail/?music_id=7028149283996125966&scene=1'
+        )
+        print('Music Detail Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
+    # ==================== 获取短剧列表接口 ====================
+    
+    def test_get_series_list(self):
+        """测试获取用户的短剧列表 /aweme/v1/web/series/list/"""
+        response = self.client.get(
+            f'/aweme/v1/web/series/list/?sec_user_id={self.test_sec_user_id}&cursor=0&count=10'
+        )
+        print('Series List Response:')
+        pprint(response.get_json())
+        self.assertIn(response.status_code, [200, 403])
+
+    # ==================== 二维码信息接口 ====================
+    
+    def test_get_fancy_qrcode_info(self):
+        """测试获取二维码信息 /aweme/v1/web/fancy/qrcode/info/"""
+        response = self.client.get(
+            '/aweme/v1/web/fancy/qrcode/info/?app_name=aweme&object_id=75389470922&schema_type=4&qrcode_type=1'
+        )
+        print('QRCode Info Response:')
         pprint(response.get_json())
         self.assertIn(response.status_code, [200, 403])
 

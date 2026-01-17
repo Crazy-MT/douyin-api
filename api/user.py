@@ -184,6 +184,26 @@ def get_list_collection():
 
 
 """
+@desc: 获取音乐详情
+@url: /aweme/v1/web/music/detail/
+@param: music_id 7028149283996125966
+@param: scene 1
+"""
+
+
+@api.route('/music/detail/')
+def get_music_detail():
+    music_id = request.args.get('music_id')
+    scene = request.args.get('scene')
+    url = '/aweme/v1/web/music/detail/'
+    params = {
+        'music_id': music_id,
+        'scene': scene
+    }
+    return make_response(request_instance.getJSON(url, params))
+
+
+"""
 @desc: 收藏的音乐
 @url: /aweme/v1/web/music/listcollection/
 @param: cursor 0
