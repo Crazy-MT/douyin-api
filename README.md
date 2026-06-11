@@ -27,7 +27,17 @@ result = r.getJSON('/aweme/v1/web/aweme/detail/', {'aweme_id': '123'})
 # 自动使用纯 Python 生成 a_bogus
 ```
 
-**详细文档**：
+**使用说明**：
+- 📖 [完整使用指南](USAGE.md) - Cookie 配置、映射表生成
+- 📖 [完整逆向指南](docs/REVERSE_GUIDE.md) - 从 0 到 1 的逆向过程
+- 📖 [快速参考](docs/QUICK_REFERENCE.md) - 5 步逆向总结
+
+**重要提示**：
+- 首次使用需配置 Cookie（自动提示输入）
+- 项目自带 100 样本示例映射表
+- 扩展映射表：`python lib/reverse/incremental_build.py`
+
+详细文档：
 - 📖 [完整逆向指南](docs/REVERSE_GUIDE.md) - 从 0 到 1 的逆向过程
 - 📖 [快速参考](docs/QUICK_REFERENCE.md) - 5 步逆向总结
 - 📖 [技术文档](docs/abogus_pure_reverse.md) - 深入技术细节

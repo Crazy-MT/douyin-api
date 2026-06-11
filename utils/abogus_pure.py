@@ -10,7 +10,8 @@ from pathlib import Path
 
 # 全局加载映射表（只加载一次）
 _ROOT = Path(__file__).parent.parent
-_MAPPING_FILE = _ROOT / "lib" / "reverse" / "time_mapping_full.json"
+_MAPPING_FILE_FULL = _ROOT / "lib" / "reverse" / "time_mapping_full.json"
+_MAPPING_FILE_SAMPLE = _ROOT / "lib" / "reverse" / "time_mapping_sample.json"
 _TIME_MAP = None
 _SORTED_TIMES = None
 _KEYSTREAM = None
@@ -20,8 +21,19 @@ def _load_data():
     global _TIME_MAP, _SORTED_TIMES, _KEYSTREAM
 
     if _TIME_MAP is None:
-        # 加载时间映射表
-        TIME_MAP = json.load(open(_MAPPING_FILE))
+        # 优先使用完整映射表，不存在则用示例表
+        if _MAPPING_FILE_FULL.exists():
+            mapping_file = _MAPPING_FILE_FULL
+        elif _MAPPING_FILE_SAMPLE.exists():
+            mapping_file = _MAPPING_FILE_SAMPLE
+            print("[WARNING] 使用示例映射表（100样本），覆盖有限。运行 lib/reverse/incremental_build.py 扩展。")
+        else:
+            raise FileNotFoundError(
+                "映射表文件不存在！\n"
+                "请运行: python lib/reverse/incremental_build.py 生成映射表"
+            )
+
+        TIME_MAP = json.load(open(mapping_file))
         _TIME_MAP = {int(k): v for k, v in TIME_MAP.items()}
         _SORTED_TIMES = sorted(_TIME_MAP.keys())
 
