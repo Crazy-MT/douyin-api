@@ -82,6 +82,7 @@ class Request(object):
         '/aweme/v1/web/tab/feed/',
         '/aweme/v1/web/aweme/favorite/',
         '/aweme/v2/web/module/feed/',
+        '/aweme/v1/web/follow/feed/',
     ]
     SIGN = execjs.compile(
         open(os.path.join(filepath, '../lib/reverse/douyin_old_algo_ref.js'), 'r', encoding='utf-8').read())
@@ -312,7 +313,7 @@ class Request(object):
         # 注意：签名 URL 必须与实际请求 URL（含域名）完全一致
         bdms_uris = ['/aweme/v1/web/tab/feed/', '/aweme/v2/web/module/feed/',
                      '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/',
-                     '/aweme/v1/web/aweme/favorite/']
+                     '/aweme/v1/web/aweme/favorite/', '/aweme/v1/web/follow/feed/']
         if uri in bdms_uris:
             sign_method = 'POST' if uri in post_uris else 'GET'
             sign_body = ''
