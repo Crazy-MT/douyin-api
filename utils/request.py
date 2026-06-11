@@ -77,8 +77,14 @@ class Request(object):
         "dnt": "1",
     }
     filepath = os.path.dirname(__file__)
+    # 需要 secsdk 三件套签名（uifid+timestamp+x-secsdk-web-signature）的接口
+    WEBSIGN_URIS = [
+        '/aweme/v1/web/tab/feed/',
+        '/aweme/v1/web/aweme/favorite/',
+        '/aweme/v2/web/module/feed/',
+    ]
     SIGN = execjs.compile(
-        open(os.path.join(filepath, '../lib/douyin.js'), 'r', encoding='utf-8').read())
+        open(os.path.join(filepath, '../lib/reverse/douyin_old_algo_ref.js'), 'r', encoding='utf-8').read())
     WEBID = ''
     client = httpx.Client(
         proxies=None,
@@ -110,57 +116,135 @@ class Request(object):
             call_name, query, self.HEADERS.get("User-Agent"))
         return a_bogus
 
-    def get_sign_bdms(self, full_url: str, params: dict) -> str:
+    def get_sign_bdms(self, full_url: str, params: dict, method: str = 'GET', body: str = '') -> str:
         """使用 bdms 方案生成 a_bogus 签名（通过 Node.js 子进程）
 
         Args:
-            full_url: 完整的请求 URL（包含域名，如 https://www-hj.douyin.com/aweme/v1/...）
-            params: 请求参数字典
+            full_url: 完整的请求 URL（含域名，如 https://www.douyin.com/aweme/v1/...）
+            params: 请求参数字典（会拼到 URL query 上参与签名）
+            method: 请求方法，GET / POST，需与实际请求一致
+            body: POST 请求体（application/x-www-form-urlencoded 字符串），参与签名
         """
         query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
         # full_url 已经包含完整域名，直接拼接参数
         url = f'{full_url}?{query}'
         uifid = self.COOKIES.get('UIFID', '')
 
-        # 使用 subprocess 调用 Node.js
-        js_path = os.path.join(self.filepath, '../lib/index.js')
-        # Windows 路径转为正斜杠，避免转义问题
-        js_path = js_path.replace('\\', '/')
-        js_code = f'''
-const {{ get_a_bogus }} = require("{js_path}");
-const result = get_a_bogus({json.dumps(url)}, {json.dumps(uifid)});
-if (global._process) global.process = global._process;
-console.log(JSON.stringify({{ a_bogus: result }}));
-process.exit(0);
-'''
+        # 使用持久的 CLI 脚本 + JSON(stdin) 入参，避免 node -e 拼接代码的转义问题
+        # 用绝对路径，保证 Node 的 __dirname / require 解析正确
+        js_path = os.path.abspath(
+            os.path.join(self.filepath, '..', 'lib', 'runtime', 'sign_cli.js'))
+        js_dir = os.path.dirname(js_path)
+        payload = json.dumps({
+            'url': url,
+            'uifid': uifid,
+            'method': (method or 'GET').upper(),
+            'body': body or '',
+        })
         try:
             result = subprocess.run(
-                ['node', '-e', js_code],
+                ['node', js_path],
+                input=payload,
                 capture_output=True,
                 text=True,
-                timeout=30,
-                cwd=os.path.dirname(js_path)
+                timeout=40,
+                cwd=js_dir,
             )
-            if result.returncode == 0:
-                # 从输出中提取 JSON 结果
-                for line in result.stdout.strip().split('\n'):
-                    if line.startswith('{'):
-                        data = json.loads(line)
-                        a_bogus = data.get('a_bogus', '')
-                        if a_bogus:
-                            return a_bogus
-                # 没找到 a_bogus，打印完整输出便于调试
-                print(f"Node.js stdout: {result.stdout}")
-                print(f"Node.js stderr: {result.stderr}")
-            else:
-                print(f"Node.js error (code={result.returncode}):")
-                print(f"  stdout: {result.stdout}")
-                print(f"  stderr: {result.stderr}")
+            # 结果以 __SIGN_RESULT__ 前缀输出，便于在混杂日志中定位
+            marker = '__SIGN_RESULT__'
+            for line in result.stdout.splitlines():
+                idx = line.find(marker)
+                if idx != -1:
+                    data = json.loads(line[idx + len(marker):])
+                    a_bogus = data.get('a_bogus', '')
+                    if a_bogus:
+                        return a_bogus
+                    logger.error(f"bdms 签名为空: {data.get('error', '')}")
+                    return ''
+            logger.error(
+                f"bdms 签名失败 (code={result.returncode})\n"
+                f"  stdout: {result.stdout[-500:]}\n"
+                f"  stderr: {result.stderr[-500:]}")
         except subprocess.TimeoutExpired:
-            print("Node.js timeout")
+            logger.error("bdms 签名超时")
         except Exception as e:
-            print(f"Error calling Node.js: {e}")
+            logger.error(f"调用 Node.js 生成签名出错: {e}")
         return ''
+
+    def get_sign_pure(self, full_url: str, params: dict, timestamp: int = None) -> str:
+        """纯 Python 生成 a_bogus（查表法）
+
+        Args:
+            full_url: 完整的请求 URL
+            params: 请求参数字典
+            timestamp: 毫秒时间戳（可选，默认当前时间）
+
+        Returns:
+            192 长度的 a_bogus 字符串
+        """
+        try:
+            from utils.abogus_pure import generate_abogus
+            import time
+
+            if timestamp is None:
+                timestamp = int(time.time() * 1000)
+
+            query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
+            url = f'{full_url}?{query}'
+
+            return generate_abogus(url, timestamp)
+        except Exception as e:
+            logger.error(f"纯 Python 生成 a_bogus 失败: {e}")
+            return ''
+
+    def get_websign(self, full_url: str, params: dict) -> dict:
+        """使用 secsdk 补环境生成 x-secsdk-web-signature（通过 Node.js 子进程）
+
+        返回 {'uifid':..., 'timestamp':..., 'signature':...}；失败返回 {}。
+        注意：调用前 params 里应已包含 a_bogus（浏览器实际签名顺序：先 a_bogus 后 secsdk）。
+
+        Args:
+            full_url: 完整请求 URL（含域名）
+            params: 请求参数字典（拼到 URL query 上参与 secsdk 签名）
+        """
+        query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
+        url = f'{full_url}?{query}'
+
+        js_path = os.path.abspath(
+            os.path.join(self.filepath, '..', 'lib', 'runtime', 'sign_websign.js'))
+        js_dir = os.path.dirname(js_path)
+        payload = json.dumps({'url': url})
+        try:
+            result = subprocess.run(
+                ['node', js_path],
+                input=payload,
+                capture_output=True,
+                text=True,
+                timeout=40,
+                cwd=js_dir,
+            )
+            marker = '__WEBSIGN_RESULT__'
+            for line in result.stdout.splitlines():
+                idx = line.find(marker)
+                if idx != -1:
+                    data = json.loads(line[idx + len(marker):])
+                    if data.get('ok'):
+                        return {
+                            'uifid': data.get('uifid', ''),
+                            'timestamp': data.get('timestamp', ''),
+                            'signature': data.get('signature', ''),
+                        }
+                    logger.error(f"secsdk 签名失败: {data.get('error', '')}")
+                    return {}
+            logger.error(
+                f"secsdk 签名失败 (code={result.returncode})\n"
+                f"  stdout: {result.stdout[-500:]}\n"
+                f"  stderr: {result.stderr[-500:]}")
+        except subprocess.TimeoutExpired:
+            logger.error("secsdk 签名超时")
+        except Exception as e:
+            logger.error(f"调用 Node.js 生成 secsdk 签名出错: {e}")
+        return {}
 
     def get_params(self, params: dict) -> dict:
         params.update(self.PARAMS)
@@ -212,21 +296,48 @@ process.exit(0);
         live_url = f'{self.LIVE_HOST}{uri}'
         web2_url = f'{self.WEB2_HOST}{uri}'
         params = self.get_params(params)
-        # 特定接口使用 bdms 签名
-        # 注意：签名URL必须与实际请求URL一致
-        bdms_uris = ['/aweme/v2/web/module/feed/', '/aweme/v1/web/locate/post/',
-                     '/aweme/v1/web/commit/item/digg/', '/aweme/v1/web/aweme/favorite/']
-        if uri in bdms_uris:
-            # module/feed 是 POST 请求，不使用 web2 域名
-            # 其他需要 web2 的接口用 web2_url
-            if uri == '/aweme/v2/web/module/feed/':
-                sign_url = url  # www.douyin.com
-            else:
-                sign_url = web2_url  # www-hj.douyin.com
-            params["a_bogus"] = self.get_sign_bdms(sign_url, params)
-            print("params['a_bogus']", params["a_bogus"])
+
+        # 确定签名 URL（根据 live/web2 参数）
+        if web2:
+            sign_url = web2_url
+        elif live:
+            sign_url = live_url
         else:
-            params["a_bogus"] = self.get_sign(uri, params)
+            sign_url = url
+
+        # 需要 POST 的接口列表（提前定义，签名时需要知道方法）
+        post_uris = ['/aweme/v2/web/module/feed/', '/aweme/v1/web/commit/item/digg/']
+
+        # 特定接口使用 bdms 签名（其余仍走旧的纯算法 get_sign）
+        # 注意：签名 URL 必须与实际请求 URL（含域名）完全一致
+        bdms_uris = ['/aweme/v1/web/tab/feed/', '/aweme/v2/web/module/feed/',
+                     '/aweme/v1/web/locate/post/', '/aweme/v1/web/commit/item/digg/',
+                     '/aweme/v1/web/aweme/favorite/']
+        if uri in bdms_uris:
+            sign_method = 'POST' if uri in post_uris else 'GET'
+            sign_body = ''
+            if data is not None:
+                sign_body = '&'.join(
+                    [f'{k}={quote(str(v))}' for k, v in data.items()])
+            # 浏览器实际签名顺序：先 a_bogus（URL 不含 secsdk 三参数），
+            # 再由 secsdk 末尾追加 uifid + timestamp + x-secsdk-web-signature。
+            if uri in self.WEBSIGN_URIS:
+                # secsdk 会在末尾追加 uifid，base 参数里不应预置（否则顺序/值不一致）
+                params.pop('uifid', None)
+
+            # 使用纯 Python 生成 a_bogus（查表法）
+            params["a_bogus"] = self.get_sign_pure(sign_url, params)
+
+            # 需要 secsdk 三件套签名的接口（feed/favorite 等会校验 web-signature）
+            if uri in self.WEBSIGN_URIS:
+                ws = self.get_websign(sign_url, params)
+                if ws:
+                    params["uifid"] = ws["uifid"]
+                    params["timestamp"] = ws["timestamp"]
+                    params["x-secsdk-web-signature"] = ws["signature"]
+        else:
+            # 其他接口使用纯 Python 生成 a_bogus
+            params["a_bogus"] = self.get_sign_pure(url, params)
 
         # 这个接口必须更改referer的值为当前请求页面的url
         referer_map = {
@@ -256,8 +367,31 @@ process.exit(0);
                 self.HEADERS['referer'] = referer_value
                 break
 
-        # 需要 POST 的接口列表
-        post_uris = ['/aweme/v2/web/module/feed/']
+        # www-hj.douyin.com 需要 bd-ticket-guard headers（favorite 等接口）
+        if sign_url.startswith('https://www-hj.douyin.com'):
+            self.HEADERS['origin'] = 'https://www.douyin.com'
+            bd_client_data_v2 = self.COOKIES.get("bd_ticket_guard_client_data_v2", "")
+            if bd_client_data_v2:
+                self.HEADERS["bd-ticket-guard-client-data"] = bd_client_data_v2
+                # 从 v2 里解码 ree_public_key（标准 base64，不是 URL-safe）
+                try:
+                    import base64
+                    # 修复 padding
+                    missing = len(bd_client_data_v2) % 4
+                    if missing:
+                        bd_client_data_v2 += '=' * (4 - missing)
+                    decoded = json.loads(base64.b64decode(bd_client_data_v2).decode('utf-8'))
+                    ree_key = decoded.get('ree_public_key', '')
+                    if ree_key:
+                        self.HEADERS["bd-ticket-guard-ree-public-key"] = ree_key
+                except Exception:
+                    pass
+            self.HEADERS["bd-ticket-guard-version"] = "2"
+            self.HEADERS["bd-ticket-guard-web-version"] = "2"
+            self.HEADERS["bd-ticket-guard-web-sign-type"] = "1"
+            # uifid 既要在 query 也要在 header
+            if params.get("uifid"):
+                self.HEADERS["uifid"] = params["uifid"]
 
         if data is not None or uri in post_uris:
             bd_client_data = self.COOKIES.get("bd_ticket_guard_client_data", None)
@@ -290,17 +424,7 @@ process.exit(0);
             # web2 请求需要修改 headers（跨子域名）
             web2_headers = self.HEADERS.copy()
             web2_headers['sec-fetch-site'] = 'same-site'
-            web2_headers['origin'] = 'https://www.douyin.com'
-            # 敏感接口（如 favorite）需要额外的 header
-            if uri in ['/aweme/v1/web/aweme/favorite/', '/aweme/v1/web/locate/post/']:
-                web2_headers['uifid'] = self.COOKIES.get('UIFID', '')
-                web2_headers['x-secsdk-csrf-token'] = 'DOWNGRADE'
-                # bd-ticket-guard 相关 header（重要！用于验证请求合法性）
-                bd_client_data = self.COOKIES.get('bd_ticket_guard_client_data', '')
-                if bd_client_data:
-                    web2_headers['bd-ticket-guard-client-data'] = bd_client_data
-                    web2_headers['bd-ticket-guard-version'] = '2'
-                    web2_headers['bd-ticket-guard-web-version'] = '1'
+            # origin 已在前面 bd-ticket-guard 逻辑里设置
             response = self.client.get(
                 web2_url, params=params, headers=web2_headers, cookies=self.COOKIES)
             print(f'url:{response.url}, code:{response.status_code}')

@@ -1,6 +1,39 @@
 
 # Douyin API
 
+🎉 **最新更新**：已实现 100% 纯 Python a_bogus 签名生成！无需 Node.js 或浏览器。
+
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
+[![Pure Python](https://img.shields.io/badge/a__bogus-Pure%20Python-success.svg)](docs/REVERSE_GUIDE.md)
+
+---
+
+## 🚀 纯 Python 签名实现
+
+本项目已完成 a_bogus 签名的**纯 Python 逆向实现**：
+
+- ✅ **100% 纯 Python** - 无需 Node.js 依赖
+- ✅ **自动签名** - Request 类默认使用纯算法
+- ✅ **高性能** - <1ms 签名生成
+- ✅ **已验证有效** - 真实请求返回正常数据
+- ✅ **覆盖 107+ 天** - 持续扩展中
+
+**快速开始**：
+```python
+from utils.request import Request
+
+r = Request()
+result = r.getJSON('/aweme/v1/web/aweme/detail/', {'aweme_id': '123'})
+# 自动使用纯 Python 生成 a_bogus
+```
+
+**详细文档**：
+- 📖 [完整逆向指南](docs/REVERSE_GUIDE.md) - 从 0 到 1 的逆向过程
+- 📖 [快速参考](docs/QUICK_REFERENCE.md) - 5 步逆向总结
+- 📖 [技术文档](docs/abogus_pure_reverse.md) - 深入技术细节
+
+---
+
 ## 简介
 本项目提供了用于获取抖音平台用户及视频信息的API接口，方便开发者获取用户作品、收藏、喜欢、观看历史等数据。
 

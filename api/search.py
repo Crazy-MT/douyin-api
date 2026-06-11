@@ -56,6 +56,7 @@ request_instance = Request()  # 创建 Request 类的实例
 }
 @param: is_filter_search = 1 | 0
 @param: list_type= single | multi
+stream/
 '''
 
 

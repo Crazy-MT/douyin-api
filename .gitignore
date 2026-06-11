@@ -6,5 +6,42 @@
 *.iml
 out
 gen
+.playwright-mcp
+# Cookie 和会话文件（私密，勿提交）
 /tests/config/cookie.json
 /config/cookie.json
+**/cookie.json
+**/cookies.json
+
+# secsdk 会话密钥/cookie（私密，勿提交）
+websign_env.json
+edge_session_cookies.json
+live_cookies.json
+/edge_trace.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# 日志文件
+*.log
+nohup.out
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+
+# 大文件映射表（超过 5MB 不提交）
+lib/reverse/time_mapping_full.json
+lib/reverse/time_mapping_2024*.json
+
+# 采样日志
+lib/reverse/sampling.log
+lib/reverse/expansion.log
