@@ -8,5 +8,10 @@ void main() {
     expect(find.text('Douyin API Debugger'), findsOneWidget);
     expect(find.text('其他用户信息'), findsOneWidget);
     expect(find.text('发送请求'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('视频详情脚本'));
+    await tester.pumpAndSettle();
+    expect(find.text('aweme_id'), findsOneWidget);
+    expect(find.text('获取并复制'), findsOneWidget);
   });
 }

@@ -26,6 +26,11 @@ class MappingBuilder {
     required int stepMillis,
     required int count,
   }) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      throw UnsupportedError(
+          '移动端不能直接运行 Node；请在 macOS/Windows 桌面端生成映射表后随 App 打包。');
+    }
+
     final root = Directory(repoRoot);
     final bdms = File('${root.path}/lib/runtime/bdms/index.js');
     if (!bdms.existsSync()) {
