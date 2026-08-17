@@ -61,6 +61,8 @@ class DouyinRequest {
     'effective_type': '4g',
     'round_trip_time': '50',
   };
+  static const _userAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
   Future<DouyinResult> send(DouyinEndpoint endpoint, Map<String, String> input,
       String cookieText) async {
@@ -81,7 +83,10 @@ class DouyinRequest {
     }..removeWhere((_, value) => value.trim().isEmpty);
 
     params['webid'] = await _getWebid(cookies);
-    params['a_bogus'] = await _signer.generate();
+    params['a_bogus'] = _signer.generate(
+      query: Uri(queryParameters: params).query,
+      userAgent: _userAgent,
+    );
 
     final host = _hosts[endpoint.host]!;
     final requestUri = Uri.parse('$host${endpoint.remoteUri}')
@@ -123,8 +128,7 @@ class DouyinRequest {
   Map<String, String> _headers(DouyinEndpoint endpoint,
       Map<String, String> params, Map<String, String> cookies) {
     final headers = <String, String>{
-      'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+      'User-Agent': _userAgent,
       'sec-fetch-site':
           endpoint.host == DouyinHost.web2 ? 'same-site' : 'same-origin',
       'sec-fetch-mode': 'cors',

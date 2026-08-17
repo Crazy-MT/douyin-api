@@ -1,13 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'abogus_signer.dart';
 import 'aweme_detail_tool.dart';
 import 'douyin_endpoint.dart';
 import 'douyin_request.dart';
-import 'mapping_builder.dart';
 
 void main() => runApp(const DouyinDebuggerApp());
 
@@ -152,11 +148,6 @@ class _DebuggerPageState extends State<DebuggerPage> {
             },
           ),
           IconButton(
-            tooltip: '生成映射表',
-            onPressed: _showMappingDialog,
-            icon: const Icon(Icons.table_chart),
-          ),
-          IconButton(
             tooltip: '视频详情脚本',
             onPressed: _showAwemeToolDialog,
             icon: const Icon(Icons.movie_filter),
@@ -281,26 +272,6 @@ class _DebuggerPageState extends State<DebuggerPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _showMappingDialog() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => const MappingDialog(),
-    );
-    if (result == null || !mounted) return;
-    try {
-      await _signer.loadMappingFile(result);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加载映射表：${_signer.mappingCount} 样本')),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加载映射表失败：$error')),
-      );
-    }
   }
 
   Future<void> _showAwemeToolDialog() async {
@@ -508,165 +479,6 @@ class _AwemeDetailDialogState extends State<AwemeDetailDialog> {
         ),
       ],
     );
-  }
-}
-
-class MappingDialog extends StatefulWidget {
-  const MappingDialog({super.key});
-
-  @override
-  State<MappingDialog> createState() => _MappingDialogState();
-}
-
-class _MappingDialogState extends State<MappingDialog> {
-  late final _repoRoot = TextEditingController(text: _defaultRepoRoot());
-  late final _outputPath = TextEditingController(
-    text:
-        '${_repoRoot.text}/douyin_flutter_debugger/assets/signing/time_mapping_sample.json',
-  );
-  final _start = TextEditingController(
-    text: '${DateTime.now().millisecondsSinceEpoch}',
-  );
-  final _step = TextEditingController(text: '600000');
-  final _count = TextEditingController(text: '10');
-  final _logs = <String>[];
-  var _running = false;
-
-  @override
-  void dispose() {
-    _repoRoot.dispose();
-    _outputPath.dispose();
-    _start.dispose();
-    _step.dispose();
-    _count.dispose();
-    super.dispose();
-  }
-
-  Future<void> _build() async {
-    setState(() {
-      _running = true;
-      _logs
-        ..clear()
-        ..add('开始生成...');
-    });
-    try {
-      final result = await MappingBuilder().build(
-        repoRoot: _repoRoot.text.trim(),
-        outputPath: _outputPath.text.trim(),
-        startTimestamp: int.parse(_start.text.trim()),
-        stepMillis: int.parse(_step.text.trim()),
-        count: int.parse(_count.text.trim()),
-      );
-      setState(() {
-        _logs
-          ..clear()
-          ..addAll(result.logs)
-          ..add('新增: ${result.added}, 总样本: ${result.total}')
-          ..add('已保存: ${result.outputPath}');
-      });
-    } catch (error) {
-      setState(() => _logs.add('失败: $error'));
-    } finally {
-      if (mounted) setState(() => _running = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('生成 a_bogus 映射表'),
-      content: SizedBox(
-        width: 720,
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const Text('调用仓库里的 Node bdms 补环境生成 a_bogus，再解码出 140 字节 bb。'),
-            const SizedBox(height: 12),
-            TextField(
-                controller: _repoRoot,
-                decoration: const InputDecoration(
-                    labelText: '仓库根目录', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
-            TextField(
-                controller: _outputPath,
-                decoration: const InputDecoration(
-                    labelText: '输出 JSON', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                SizedBox(
-                    width: 220,
-                    child: TextField(
-                        controller: _start,
-                        decoration: const InputDecoration(
-                            labelText: '起始毫秒时间戳',
-                            border: OutlineInputBorder()))),
-                SizedBox(
-                    width: 160,
-                    child: TextField(
-                        controller: _step,
-                        decoration: const InputDecoration(
-                            labelText: '步长 ms', border: OutlineInputBorder()))),
-                SizedBox(
-                    width: 120,
-                    child: TextField(
-                        controller: _count,
-                        decoration: const InputDecoration(
-                            labelText: '数量', border: OutlineInputBorder()))),
-              ],
-            ),
-            const SizedBox(height: 12),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: SizedBox(
-                height: 180,
-                width: double.infinity,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(12),
-                  child:
-                      SelectableText(_logs.isEmpty ? '尚未生成' : _logs.join('\n')),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _running ? null : () => Navigator.pop(context),
-          child: const Text('关闭'),
-        ),
-        FilledButton.icon(
-          onPressed: _running ? null : _build,
-          icon: _running
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.play_arrow),
-          label: const Text('生成'),
-        ),
-        FilledButton.tonal(
-          onPressed: _running
-              ? null
-              : () => Navigator.pop(context, _outputPath.text.trim()),
-          child: const Text('加载此表'),
-        ),
-      ],
-    );
-  }
-
-  String _defaultRepoRoot() {
-    final cwd = Directory.current.path;
-    if (File('$cwd/lib/runtime/bdms/index.js').existsSync()) return cwd;
-    final parent = Directory(cwd).parent.path;
-    if (File('$parent/lib/runtime/bdms/index.js').existsSync()) return parent;
-    return '/Users/maotong/Desktop/project/douyin-api';
   }
 }
 

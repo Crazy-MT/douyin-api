@@ -173,7 +173,7 @@ class Request(object):
         return ''
 
     def get_sign_pure(self, full_url: str, params: dict, timestamp: int = None) -> str:
-        """纯 Python 生成 a_bogus（查表法）
+        """纯 Python 生成 a_bogus（直接算法）
 
         Args:
             full_url: 完整的请求 URL
@@ -193,7 +193,7 @@ class Request(object):
             query = '&'.join([f'{k}={quote(str(v))}' for k, v in params.items()])
             url = f'{full_url}?{query}'
 
-            return generate_abogus(url, timestamp)
+            return generate_abogus(url, timestamp, self.HEADERS.get("User-Agent"))
         except Exception as e:
             logger.error(f"纯 Python 生成 a_bogus 失败: {e}")
             return ''
@@ -326,7 +326,7 @@ class Request(object):
                 # secsdk 会在末尾追加 uifid，base 参数里不应预置（否则顺序/值不一致）
                 params.pop('uifid', None)
 
-            # 使用纯 Python 生成 a_bogus（查表法）
+            # 使用纯 Python 生成 a_bogus（直接算法）
             params["a_bogus"] = self.get_sign_pure(sign_url, params)
 
             # 需要 secsdk 三件套签名的接口（feed/favorite 等会校验 web-signature）
